@@ -1,0 +1,59 @@
+# ================= 密钥与环境（严禁提交）=================
+.env
+.env.*
+!.env.example
+.gh_token
+*token*.txt
+
+# ================= Python =================
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# ================= 模型权重（超大，严禁提交）=================
+data/models/
+data/lora/
+*.safetensors
+*.gguf
+*.bin
+*.pt
+*.pth
+
+# ================= 数据：数据库 / 含原始内容 / 派生大文件 =================
+data/*.db
+data/*.sqlite
+data/chroma/
+data/trace.db
+data/memory.db
+
+# 第三方原始数据（仅研究用途，不再分发）
+data/labeled_1200.csv
+data/complaints.csv
+data/eval_*.csv
+data/dashboard.json
+data/**/*.jsonl
+
+# 允许公开：政策库（公开法律法规）与去标识样例
+!data/policy_corpus.jsonl
+!data/samples/**
+!data/region_centers.csv
+
+# ================= 本地临时文件 =================
+.tmp/
+data/*.log
+data/ppt_extract.txt
+data/local_llm.log
+
+# ================= 脚本临时输出 / 日志 =================
+scripts/*_out.txt
+scripts/*.log
+*.log
+
+# ================= IDE / OS =================
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+notebooks/.ipynb_checkpoints/

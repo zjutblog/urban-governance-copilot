@@ -1,0 +1,48 @@
+# Harness 边界定义 —— 显式声明 agent 运行时的约束边界
+# 这是整个系统的"安全围栏"，与业务逻辑解耦
+
+runtime:
+  max_steps: 8            # 单次诉求最多执行的计划步数
+  max_revisions: 2        # 计划最多重规划（replan）次数
+  max_wall_time_sec: 300  # 单次运行墙钟上限（秒）
+  max_retry_per_step: 2   # 单步失败最大重试次数
+
+# 动作安全等级：read 直接放行；write 必须过质量门控/人工
+action_safety:
+  plan: read
+  perceive: read
+  analyze: read
+  retrieve: read
+  retrieve_policy: read
+  stats: read
+  geo_query: read
+  mcp_call: read          # MCP 工具（RDMA geotools/model_tools），当前仅只读分析类工具
+  decide: write           # 生成回复 = write，需过质量门控
+  escalate: write         # 转人工
+
+# 每个 agent 角色允许的动作白名单
+action_allowlist:
+  planner: [plan]
+  perception: [perceive]
+  analyst: [analyze, retrieve, stats, geo_query, mcp_call]
+  decision: [decide]
+  replanner: [replan]
+  executor: [perceive, analyze, retrieve, retrieve_policy, stats, geo_query, mcp_call, decide]
+
+# write 级动作是否需要人工确认（Human-in-the-loop）
+require_human_approval: true
+
+# 质量门控（Self-Consistency）
+quality_gate:
+  algorithm: self_consistency
+  k: 3                 # 采样数；CPU 上可降为 1
+  temperature: 0.7     # 采样温度
+  theta_high: 0.6      # >= 直接通过
+  theta_low: 0.4       # < 升级人工；区间内重写
+  max_retries: 2
+  vote_fields: [responsible_department]   # 参与投票的离散字段
+
+# 本地感知模型（CPU 推理，后训练产物）
+perception:
+  classifier_model: "D:/jupyter_work/event_classifier/best_model"
+  enabled: true

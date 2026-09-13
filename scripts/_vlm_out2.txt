@@ -1,0 +1,2 @@
+﻿model = moonshot-v1-vision-preview
+���� ERR: Error code: 404 - {'error': {'message': 'Not found the model moonshot-v1-vision-preview or Permission denied', 'type': 'resource_not_found_error'}}

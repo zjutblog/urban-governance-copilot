@@ -1,0 +1,64 @@
+%% 城市治理 Copilot · 端到端闭环流程图（Mermaid）
+%% 用法：粘贴到 https://mermaid.live 或 VS Code(Markdown Preview Mermaid) 即可渲染
+%% 配色语义：灰=输入输出｜青绿=本地/离线｜青=检索｜蓝=大模型｜橙=规则门控｜紫=人工
+flowchart LR
+
+  %% ================= 审计留痕：主链路 =================
+  subgraph AUDIT["🗂 审计留痕 · 全链路 trace 落库（可回放 / 可审计）　｜　端到端 < 30s（不含人工复核）"]
+    direction LR
+    A["① 多模态输入<br/>文本 / 现场图片"]
+    B["② 感知与诉求理解<br/>分类 · 实体 · 地点 · 紧急度"]
+    C["③ 知识检索<br/>真实政策库 + 历史案例"]
+    D{"④ 证据充分性？<br/>自适应检索"}
+    E["⑤ 空间分析<br/>地点定位 + 邻近案例"]
+    F["⑥ 智能分析<br/>多源信息融合"]
+    G["⑦ 决策建议<br/>处置措施 · 责任部门 · 真实条款引用"]
+    H["⑧ 质量门控<br/>一致性投票 + 引用溯源 + 规则"]
+    I["⑨ 交付<br/>处理工单(完整率100%) + 面向市民回复"]
+    J["⑩ 人工复核 / 督办<br/>采纳 · 修改 · 驳回"]
+
+    A --> B --> C --> D
+    D -->|证据不足 · 换词再检索 限1次| C
+    D -->|证据充分| E --> F --> G --> H
+    H -->|pass 通过| I
+    H -->|retry 重写| G
+    H -->|escalate 一致性低| J
+    I --> J
+  end
+
+  %% ================= 工具与模型调用层 =================
+  subgraph TOOLS["🔧 工具与模型调用层（Agent 调动外部资源完成“行动”，区别于问答机器人）"]
+    direction LR
+    T1["本地 BERT 分类器<br/>感知分类（省 token）"]
+    T2["BM25 检索引擎<br/>案例 33万 / 政策 24部·44条款"]
+    T3["离线 geocoder<br/>行政区划中心点表"]
+    T4["MCP 模型工具<br/>洪水 / 交通 / 生活圈"]
+    T5["VLM 识图 (kimi)<br/>现场照片 → 文本"]
+    L1["大模型 DeepSeek<br/>分析 · 决策×3投票 · 回复"]
+  end
+
+  A -.->|识图| T5
+  B -.->|本地分类| T1
+  C -.->|召回| T2
+  E -.->|地点定位| T3
+  E -.->|模型计算| T4
+  F -.->|推理| L1
+  G -.->|生成 + 引用校验| L1
+  H -.->|多次采样投票| L1
+
+  J -.->|复核结果回流 · 数据飞轮| B
+
+  %% ================= 配色 =================
+  classDef io fill:#f1f3f7,stroke:#6b7280,color:#1a2233
+  classDef local fill:#e6f7f1,stroke:#19a97b,color:#0b5f47
+  classDef search fill:#e6f4fb,stroke:#2b8fd6,color:#0b4a72
+  classDef llm fill:#e7effc,stroke:#1f5fbf,color:#123a78
+  classDef rule fill:#fff4e5,stroke:#d97706,color:#7a4a05
+  classDef human fill:#f3e8ff,stroke:#7c3aed,color:#4c1d95
+
+  class A,I io
+  class B,E,T1,T3,T4 local
+  class C,T2 search
+  class F,G,L1,T5 llm
+  class H rule
+  class J human

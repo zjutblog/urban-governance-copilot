@@ -1,0 +1,16 @@
+from app.rag.loader import load_complaints
+from app.rag.case_builder import build_case_document
+
+
+
+rows=load_complaints(
+    "data/complaints.csv"
+)
+
+
+doc=build_case_document(
+    rows[0]
+)
+
+
+print(doc)

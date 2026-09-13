@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>城市治理 Copilot</title>
+  <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/leaflet/1.9.4/leaflet.css" />
+  <link rel="stylesheet" href="/style.css?v=17" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">◈</span>
+      <div>
+        <h1>城市治理 Copilot</h1>
+        <p>多智能体辅助决策 · 人民网留言板 2025</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button id="btnApi" class="ghost-btn">⚙ API 设置</button>
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">就绪</span>
+    </div>
+  </header>
+
+  <!-- ============ 功能大厅 ============ -->
+  <main class="home" id="home">
+    <div class="hero">
+      <h2>人民网留言板 · 民情治理平台</h2>
+      <p>基于 33 万条真实留言，智能洞察民情、辅助治理决策。选择功能进入：</p>
+    </div>
+    <div class="cards" id="cardGrid"></div>
+  </main>
+
+  <!-- ============ 视图：智能对话 ============ -->
+  <section class="view" id="view-chat" hidden>
+    <div class="view-bar"><button class="back-btn" data-back>← 返回大厅</button><span class="view-title">智能对话助手</span></div>
+    <div class="layout">
+      <div class="chat-main">
+        <div class="history-panel" id="historyPanel">
+          <div class="history-panel-title">历史对话</div>
+          <div id="historyList" class="history-list-panel"><div class="dash-empty">暂无记录</div></div>
+        </div>
+        <div class="left">
+          <div class="chatbox" id="chatbox">
+            <div class="welcome">
+              <h2>请输入一条群众留言</h2>
+              <p>系统将为您处理：感知 → 分析 → 检索 → 空间分析 → 决策 → 复核</p>
+              <div class="examples" id="examples">
+                <button class="chip">小区附近晚上施工噪音很大，希望有关部门处理</button>
+                <button class="chip">山西省太原市小店区南中环附近路灯长期不亮，影响夜间出行</button>
+                <button class="chip">我家暖气温度一直不达标，报修多次未解决</button>
+              </div>
+            </div>
+          </div>
+          <form class="inputbar" id="inputForm">
+            <input id="textInput" placeholder="输入诉求内容…（可智能识别该走哪个功能）" autocomplete="off" />
+            <label class="img-btn" title="上传现场照片">📷<input type="file" id="chatImg" accept="image/*" style="display:none" /></label>
+            <button id="sendBtn" type="submit">发送</button>
+          </form>
+          <div id="routeHint" class="route-hint"></div>
+        </div>
+      </div>
+      <div class="right">
+        <div class="panel map-panel">
+          <div class="panel-title">空间分析</div>
+          <div id="map"></div>
+          <div id="mapEmpty" class="map-empty">执行含空间分析的诉求后，此处显示地点与邻近案例</div>
+        </div>
+        <div class="panel trace-panel">
+          <div class="panel-title">处理过程</div>
+          <div id="traceList" class="trace-list"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 视图：民情数据看板 ============ -->
+  <section class="view" id="view-dashboard" hidden>
+    <div class="view-bar"><button class="back-btn" data-back>← 返回大厅</button><span class="view-title">民情数据看板</span></div>
+    <div class="dash-wrap">
+      <div class="dash-stats" id="dashStats"></div>
+      <div class="dash-grid" id="dashGrid"></div>
+    </div>
+  </section>
+
+  <!-- ============ 视图：区县地图洞察 ============ -->
+  <section class="view" id="view-map" hidden>
+    <div class="view-bar"><button class="back-btn" data-back>← 返回大厅</button><span class="view-title">区县地图洞察（点击区县看常见诉求）</span></div>
+    <div class="layout mapfull">
+      <div class="map-panel full"><div id="bigMap"></div><div id="bigMapEmpty" class="map-empty">加载民情地点…</div></div>
+    </div>
+  </section>
+
+  <!-- ============ 视图：风险预警 ============ -->
+  <section class="view" id="view-risk" hidden>
+    <div class="view-bar"><button class="back-btn" data-back>← 返回大厅</button><span class="view-title">风险预警</span></div>
+    <div class="risk-wrap" id="riskList"><div class="dash-empty">加载中…</div></div>
+  </section>
+
+  <!-- ============ 视图：相似案例检索 ============ -->
+  <section class="view" id="view-search" hidden>
+    <div class="view-bar"><button class="back-btn" data-back>← 返回大厅</button><span class="view-title">相似案例检索</span></div>
+    <div class="search-wrap">
+      <form class="inputbar" id="searchForm">
+        <input id="searchInput" placeholder="输入诉求关键词，如：广场舞噪音 / 供暖不足 / 物业失职…" autocomplete="off" />
+        <button type="submit">检索</button>
+      </form>
+      <div id="searchResults" class="search-results"><div class="dash-empty">输入关键词，检索历史相似案例</div></div>
+    </div>
+  </section>
+
+  <!-- ============ 视图：单条快速分析 ============ -->
+  <section class="view" id="view-quick" hidden>
+    <div class="view-bar"><button class="back-btn" data-back>← 返回大厅</button><span class="view-title">单条快速分析</span></div>
+    <div class="search-wrap">
+      <form class="inputbar" id="quickForm">
+        <input id="quickInput" placeholder="粘贴一条留言，快速分析分类/归口/紧急度（本机，无需大模型）" autocomplete="off" />
+        <button type="submit">分析</button>
+      </form>
+      <div id="quickResult" class="search-results"><div class="dash-empty">粘贴留言后点击分析</div></div>
+    </div>
+  </section>
+
+  <!-- ============ 视图：批量分析 ============ -->
+  <section class="view" id="view-batch" hidden>
+    <div class="view-bar"><button class="back-btn" data-back>← 返回大厅</button><span class="view-title">批量分析</span></div>
+    <div class="batch-wrap">
+      <div class="upload-box">
+        <input type="file" id="batchFile" accept=".csv,.txt" />
+        <button id="batchBtn" class="primary-btn">上传并分析</button>
+        <div class="hint">上传 CSV（每行第一列=留言内容）或 txt（每行一条）。本机分析，无需大模型。</div>
+      </div>
+      <div id="batchResult" class="search-results"><div class="dash-empty">选择文件后上传分析</div></div>
+    </div>
+  </section>
+
+  <!-- ============ 视图：民情月报 ============ -->
+  <section class="view" id="view-report" hidden>
+    <div class="view-bar"><button class="back-btn" data-back>← 返回大厅</button><span class="view-title">民情月报</span></div>
+    <div class="report-wrap">
+      <div class="report-form">
+        <input id="repField" placeholder="领域（如 城建/交通/环保，留空=全部）" />
+        <input id="repProvince" placeholder="省份（如 河南，留空=全国）" />
+        <input id="repMonth" placeholder="月份（如 2025-03，留空=全年）" />
+        <button id="reportBtn" class="primary-btn">生成月报</button>
+      </div>
+      <div id="reportResult" class="report-result"><div class="dash-empty">输入条件生成治理月报</div></div>
+    </div>
+  </section>
+
+  <!-- ============ 视图：任务记忆 ============ -->
+  <section class="view" id="view-review" hidden>
+    <div class="view-bar"><button class="back-btn" data-back>← 返回大厅</button><span class="view-title">任务记忆</span></div>
+    <div id="reviewList" class="search-results"><div class="dash-empty">加载历史任务…</div></div>
+  </section>
+
+  <!-- ============ 视图：文档分析 ============ -->
+  <section class="view" id="view-doc" hidden>
+    <div class="view-bar"><button class="back-btn" data-back>← 返回大厅</button><span class="view-title">文档分析</span></div>
+    <div class="search-wrap">
+      <div class="report-form">
+        <textarea id="docInput" rows="6" placeholder="粘贴要分析的文本 / 报告 / 规范…"></textarea>
+        <button id="docBtn" class="primary-btn">分析</button>
+      </div>
+      <div id="docResult" class="search-results"><div class="dash-empty">粘贴文本后分析</div></div>
+    </div>
+  </section>
+
+  <!-- ============ 视图：表格分析 ============ -->
+  <section class="view" id="view-excel" hidden>
+    <div class="view-bar"><button class="back-btn" data-back>← 返回大厅</button><span class="view-title">表格分析</span></div>
+    <div class="search-wrap">
+      <div class="upload-box">
+        <input type="file" id="excelFile" accept=".csv,.txt" />
+        <button id="excelBtn" class="primary-btn">分析表格</button>
+      </div>
+      <div id="excelResult" class="search-results"><div class="dash-empty">上传 CSV/TXT 表格后分析数据质量、统计、异常值</div></div>
+    </div>
+  </section>
+
+  <!-- ============ 建设中弹窗 ============ -->
+  <div class="modal" id="todoModal">
+    <div class="modal-box small">
+      <div class="modal-head"><span>建设中</span><button class="ghost-btn" id="closeTodo">关闭</button></div>
+      <div class="modal-body" id="todoText">该栏目正在建设中，敬请期待。</div>
+    </div>
+  </div>
+
+  <!-- ============ API 设置弹窗 ============ -->
+  <div class="modal" id="apiModal">
+    <div class="modal-box">
+      <div class="modal-head"><span>API 设置</span><button class="ghost-btn" id="closeApi">关闭</button></div>
+      <div class="modal-body">
+        <label class="field-label">大模型 API Key（DeepSeek / OpenAI 兼容）</label>
+        <input id="apiKeyInput" type="password" placeholder="sk-..." />
+        <div class="hint">默认读取后端 .env 的 LLM_API_KEY；此处填写可覆盖（仅本次会话生效，存于浏览器本地）。</div>
+        <button id="saveApi" class="primary-btn">保存</button>
+        <button id="resetApi" class="ghost-btn">恢复默认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 案例详情弹窗 ============ -->
+  <div class="modal" id="caseModal">
+    <div class="modal-box">
+      <div class="modal-head"><span>案例详情</span><button class="ghost-btn" id="closeCase">关闭</button></div>
+      <div class="modal-body"><div id="caseContent" style="white-space:pre-wrap;line-height:1.8;font-size:13px"></div></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.bootcdn.net/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+  <script src="/app.js?v=17"></script>
+</body>
+</html>
+
+
+
+
+
+
+
