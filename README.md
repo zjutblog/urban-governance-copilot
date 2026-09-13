@@ -26,8 +26,6 @@
   </tr>
 </table>
 
-> 功能演示入口：`http://127.0.0.1:8000`
->
 
 ---
 ##  有点不一样的地方
@@ -40,20 +38,11 @@
 
 ## 架构
 
-```mermaid
-flowchart LR
-  A["① 多模态输入<br/>文本 / 现场图片"] --> B["② 感知与诉求理解"] --> C["③ 知识检索<br/>政策库 + 历史案例"]
-  C --> D{"④ 证据充分性？<br/>自适应检索"}
-  D -->|充分| E["⑤ 空间分析"] --> F["⑥ 智能分析"] --> G["⑦ 决策建议<br/>措施·归口·真实条款"]
-  G --> H["⑧ 质量门控<br/>投票 + 引用校验"]
-  H -->|pass| I["⑨ 交付<br/>工单 + 回复"] --> J["⑩ 人工复核"]
-  H -->|retry| G
-  H -->|escalate| J
-  D -->|不足·再检索| C
-  J -.->|数据飞轮| B
-```
-
-> 完整版（含**工具与模型调用层**、审计留痕、配色）见 [`docs/flow.mmd`](docs/flow.mmd)。
+<table>
+  <tr>
+    <td colspan="2"><img width="1773" height="880" alt="image" src="https://github.com/user-attachments/assets/99f389fe-b472-45e8-a5c7-7d10854b1f8d" /><br/>
+  </tr>
+</table>
 
 **多智能体编排**（LangGraph）：`plan → execute → replan → quality_gate → human_review`，
 动作白名单 + 预算/超时控制，全过程 `trace` 落库、可回放。
@@ -115,7 +104,7 @@ python -m uvicorn server:app --host 127.0.0.1 --port 8000
 
 ---
 
-## 评测（诚实结果）
+## 评测
 
 | 任务 | 方案 | 指标 |
 |---|---|---|
